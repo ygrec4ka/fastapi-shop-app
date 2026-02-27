@@ -1,12 +1,13 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+from black.strings import normalize_unicode_escape_sequences
 from sqlalchemy import Text, Float, DateTime, func, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 from core.models import Base
 
-# if TYPE_CHECKING:
-#  from app.models import Category
+if TYPE_CHECKING:
+    from core.models import Category
 
 
 class Product(Base):
@@ -15,9 +16,9 @@ class Product(Base):
         index=True,
     )
     name: Mapped[str] = mapped_column(nullable=False, index=True)
-    description: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text, nullable=True)
     price: Mapped[float] = mapped_column(Float, nullable=False)
-    image_url: Mapped[str] = mapped_column()
+    image_url: Mapped[str] = mapped_column(nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -25,17 +26,17 @@ class Product(Base):
         nullable=False,
     )
 
-    # category_id: Mapped[int] = mapped_column(
-    #     ForeignKey(
-    #         "categories.id",
-    #         ondelete="CASCADE",
-    #     ),
-    #     nullable=False,
-    # )
+    category_id: Mapped[int] = mapped_column(
+        ForeignKey(
+            "categories.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+    )
 
-    # category: Mapped["Category"] = relationship(
-    #     back_populates="products",
-    # )
+    category: Mapped["Category"] = relationship(
+        back_populates="products",
+    )
 
     def __repr__(self):
         return f"Product(id={self.id}, name={self.name}, price={self.price})"

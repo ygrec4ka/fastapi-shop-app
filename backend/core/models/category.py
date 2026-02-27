@@ -9,6 +9,7 @@ if TYPE_CHECKING:
 
 
 class Category(Base):
+    __tablename__ = "categories"
 
     id: Mapped[int] = mapped_column(
         primary_key=True,
@@ -29,6 +30,7 @@ class Category(Base):
 
     products: Mapped[List["Product"]] = relationship(
         back_populates="category",
+        cascade="all, delete-orphan",
     )
 
     def __repr__(self):
