@@ -2,10 +2,10 @@ from typing import TYPE_CHECKING, List
 
 from sqlalchemy import String
 from sqlalchemy.orm import mapped_column, Mapped, relationship
-from backend.app.models import Base
+from core.models import Base
 
 if TYPE_CHECKING:
-    from backend.app.models import Product
+    from core.models import Product
 
 
 class Category(Base):

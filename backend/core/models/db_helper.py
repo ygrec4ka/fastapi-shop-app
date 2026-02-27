@@ -1,7 +1,7 @@
 import logging
 from typing import AsyncGenerator
 
-from backend.app.config import settings
+from core.config import settings
 from sqlalchemy.ext.asyncio import (
     create_async_engine,
     AsyncEngine,
@@ -21,7 +21,6 @@ class DatabaseHelper:
         pool_size: int = 5,
         max_overflow: int = 10,
     ) -> None:
-
         self.engine: AsyncEngine = create_async_engine(
             url=url,
             echo=echo,
@@ -29,22 +28,18 @@ class DatabaseHelper:
             pool_size=pool_size,
             max_overflow=max_overflow,
         )
-
         self.session_factory = async_sessionmaker(
             bind=self.engine,
+            autoflush=False,
             autocommit=False,
             expire_on_commit=False,
         )
 
-    async def dispose(
-        self,
-    ) -> None:
+    async def dispose(self) -> None:
         await self.engine.dispose()
         log.info("Database engine dispose")
 
-    async def session_getter(
-        self,
-    ) -> AsyncGenerator[AsyncSession, None]:
+    async def session_getter(self) -> AsyncGenerator[AsyncSession, None]:
         async with self.session_factory() as session:
             yield session
 

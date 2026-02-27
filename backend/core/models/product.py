@@ -3,14 +3,13 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import Text, Float, DateTime, func, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
-from backend.app.models import Base
+from core.models import Base
 
-if TYPE_CHECKING:
-    from backend.app.models import Category
+# if TYPE_CHECKING:
+#  from app.models import Category
 
 
 class Product(Base):
-
     id: Mapped[int] = mapped_column(
         primary_key=True,
         index=True,
@@ -26,16 +25,17 @@ class Product(Base):
         nullable=False,
     )
 
-    category_id: Mapped[int] = mapped_column(
-        ForeignKey(
-            "categories.id",
-            ondelete="CASCADE",
-        ),
-        nullable=False,
-    )
-    category: Mapped["Category"] = relationship(
-        back_populates="products",
-    )
+    # category_id: Mapped[int] = mapped_column(
+    #     ForeignKey(
+    #         "categories.id",
+    #         ondelete="CASCADE",
+    #     ),
+    #     nullable=False,
+    # )
+
+    # category: Mapped["Category"] = relationship(
+    #     back_populates="products",
+    # )
 
     def __repr__(self):
         return f"Product(id={self.id}, name={self.name}, price={self.price})"
