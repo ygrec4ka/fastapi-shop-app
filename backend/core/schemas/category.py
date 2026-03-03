@@ -21,7 +21,7 @@ class CategoryCreate(CategoryBase):
 
 
 class CategoryResponse(CategoryBase):
-    id: int = Field(..., description="Unique category id")
+    id: int = Field(..., description="Unique category ID")
 
     class Config:
         form_attributes = True
