@@ -23,9 +23,9 @@ def upgrade() -> None:
         "products",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("name", sa.String(), nullable=False),
-        sa.Column("description", sa.Text(), nullable=False),
+        sa.Column("description", sa.Text(), nullable=True),
         sa.Column("price", sa.Float(), nullable=False),
-        sa.Column("image_url", sa.String(), nullable=False),
+        sa.Column("image_url", sa.String(), nullable=True),
         sa.Column(
             "created_at",
             sa.DateTime(timezone=True),
