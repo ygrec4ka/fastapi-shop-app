@@ -1,13 +1,12 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from black.strings import normalize_unicode_escape_sequences
 from sqlalchemy import Text, Float, DateTime, func, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
-from core.models import Base
+from app.core.models import Base
 
 if TYPE_CHECKING:
-    from core.models import Category
+    from app.core.models import Category
 
 
 class Product(Base):

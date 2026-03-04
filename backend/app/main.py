@@ -2,7 +2,7 @@ import logging
 
 import uvicorn
 from fastapi import FastAPI
-from core.config import settings
+from app.config import settings
 
 
 logging.basicConfig(

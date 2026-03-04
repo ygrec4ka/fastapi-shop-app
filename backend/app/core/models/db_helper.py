@@ -1,7 +1,7 @@
 import logging
 from typing import AsyncGenerator
 
-from core.config import settings
+from app.config import settings
 from sqlalchemy.ext.asyncio import (
     create_async_engine,
     AsyncEngine,

@@ -5,8 +5,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import select, Result, Sequence
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.core.models import Category
-from backend.core.schemas.category import CategoryCreate
+from app.core.schemas.category import CategoryCreate
 
 
 class CategoryService:
