@@ -6,13 +6,13 @@ from sqlalchemy import select, Result, Sequence
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.schemas.category import CategoryCreate
+from app.core.models import Category
 
 
 class CategoryService:
     def __init__(self, session: AsyncSession):
         self.session = session
         self.logger = logging.getLogger(__name__)
-
 
     async def create_new_category(self, category_data: CategoryCreate) -> Category:
         self.logger.debug("Starting to create category")
@@ -27,21 +27,19 @@ class CategoryService:
 
         return new_category
 
-
     async def get_category_by_id(self, category_id: int) -> Category:
         self.logger.debug("Starting to get category by id: %s", category_id)
 
-        category = self.session.get(Category, category_id)
+        category = await self.session.get(Category, category_id)
         if not category:
             self.logger.warning("Category not found: %s", category_id)
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Category not found"
+                detail=f"Category not found with id: {category_id}",
             )
 
-        self.logger.debug("Category found: %s", category.id)
+        self.logger.debug("Category found: %s", category_id)
         return category
-
 
     async def get_all_categories(self) -> Sequence[Category]:
         self.logger.debug("Starting to get all categories")
@@ -54,16 +52,17 @@ class CategoryService:
 
         return all_categories
 
-
     async def delete_category(self, category_id: int) -> None:
         self.logger.debug("Starting to delete category: %s", category_id)
 
-        category = self.session.get(Category, category_id)
+        category = await self.session.get(Category, category_id)
         if not category:
+            self.logger.warning("Category not found: %s", category_id)
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Category not found"
+                detail=f"Category not found with id: {category_id}",
             )
+        self.logger.debug("Category found: %s", category_id)
 
         await self.session.delete(category)
         await self.session.commit()
