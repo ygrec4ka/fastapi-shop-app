@@ -3,7 +3,7 @@ from typing import Optional, List
 
 from pydantic import BaseModel, Field
 
-from core.schemas.category import CategoryResponse
+from app.core.schemas.category import CategoryResponse
 
 
 class ProductBase(BaseModel):
