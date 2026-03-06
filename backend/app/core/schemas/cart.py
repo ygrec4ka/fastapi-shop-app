@@ -7,7 +7,7 @@ class CartItemBase(BaseModel):
     quantity: int = Field(..., gt=0, description="Quantity (must be greater than 0)")
 
 
-class CartCreate(CartItemBase):
+class CartItemCreate(CartItemBase):
     pass
 
 
