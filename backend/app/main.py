@@ -1,8 +1,9 @@
 import logging
-
 import uvicorn
+
 from fastapi import FastAPI
-from starlette.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.api import router as api_router
@@ -27,6 +28,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.mount("/static", StaticFiles(directory=settings.static_dir), name="static")
+
 
 app.include_router(api_router)
 
