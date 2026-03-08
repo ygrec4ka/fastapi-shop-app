@@ -6,7 +6,7 @@ from starlette import status
 
 from app.config import settings
 
-from app.api.dependencies import get_category_services
+from app.api.dependencies import get_category_service
 from app.core.schemas.category import CategoryResponse
 from app.core.services.category import CategoryService
 
@@ -22,7 +22,7 @@ router = APIRouter(
     status_code=status.HTTP_200_OK,
 )
 async def get_categories(
-    category_service: CategoryService = Depends(get_category_services),
+    category_service: CategoryService = Depends(get_category_service),
 ):
     return await category_service.get_all_categories()
 
@@ -34,6 +34,6 @@ async def get_categories(
 )
 async def get_category(
     category_id: int,
-    category_service: CategoryService = Depends(get_category_services),
+    category_service: CategoryService = Depends(get_category_service),
 ):
     return await category_service.get_category_by_id(category_id)
