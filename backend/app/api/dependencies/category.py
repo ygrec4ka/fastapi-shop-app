@@ -5,7 +5,7 @@ from app.core.models import db_helper
 from app.core.services.category import CategoryService
 
 
-def get_category_services(
+def get_category_service(
     session: AsyncSession = Depends(db_helper.session_getter),
 ):
     return CategoryService(session)
