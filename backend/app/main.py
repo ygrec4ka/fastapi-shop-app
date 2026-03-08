@@ -4,7 +4,7 @@ import uvicorn
 from fastapi import FastAPI
 
 from app.config import settings
-from api import router as api_router
+from app.api import router as api_router
 
 logging.basicConfig(
     level=settings.logging.log_level_value,
