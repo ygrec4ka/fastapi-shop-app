@@ -2,8 +2,9 @@ import logging
 
 import uvicorn
 from fastapi import FastAPI
-from app.config import settings
 
+from app.config import settings
+from api import router as api_router
 
 logging.basicConfig(
     level=settings.logging.log_level_value,
@@ -12,6 +13,9 @@ logging.basicConfig(
 
 
 app = FastAPI()
+
+
+app.include_router(api_router)
 
 
 if __name__ == "__main__":
