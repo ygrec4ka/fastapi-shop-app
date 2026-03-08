@@ -1,5 +1,5 @@
-from .category import get_category_services
+from .category import get_category_service
 
 __all__ = [
-    "get_category_services",
+    "get_category_service",
 ]
