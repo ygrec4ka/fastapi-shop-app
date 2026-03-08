@@ -1,5 +1,5 @@
 import logging
-from typing import Sequence, List, TYPE_CHECKING
+from typing import Sequence, List
 
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,24 +9,14 @@ from sqlalchemy.orm import joinedload, selectinload
 from app.core.schemas.product import ProductCreate
 from app.core.models import Product, Category
 
-if TYPE_CHECKING:
-    from app.core.services.category import CategoryService
 
 class ProductService:
-    def __init__(
-            self,
-            session: AsyncSession,
-            category_service: 'CategoryService',
-    ):
+    def __init__(self, session: AsyncSession):
         self.session = session
-        self.category_service = category_service
         self.logger = logging.getLogger(__name__)
 
     async def create_new_product(self, product_data: ProductCreate) -> Product:
         self.logger.debug("Starting to create product")
-
-        await self.category_service.get_category_by_id(product_data.category_id)
-        self.logger.debug("Category validated: %s", product_data.category_id)
 
         new_product = Product(**product_data.model_dump())
         self.logger.debug("Created new product object")
@@ -66,10 +56,9 @@ class ProductService:
     async def get_all_products(self) -> Sequence[Product]:
         self.logger.debug("Starting to get all products")
 
-        stmt = (
-            select(Product)
-            .options(joinedload(Product.category))
-        ).order_by(Product.created_at.desc())
+        stmt = (select(Product).options(joinedload(Product.category))).order_by(
+            Product.created_at.desc()
+        )
 
         result: Result = await self.session.execute(stmt)
         all_products = result.unique().scalars().all()
@@ -101,11 +90,15 @@ class ProductService:
 
         result: Result = await self.session.execute(stmt)
         products = result.unique().scalars().all()
-        self.logger.info("Retrieved %d products for category %s", len(products), category_id)
+        self.logger.info(
+            "Retrieved %d products for category %s", len(products), category_id
+        )
 
         return products
 
-    async def get_multiple_products_by_ids(self, product_ids: List[int]) -> Sequence[Product]:
+    async def get_multiple_products_by_ids(
+        self, product_ids: List[int]
+    ) -> Sequence[Product]:
         self.logger.debug("Starting to get multiple products by ids: %s", product_ids)
 
         stmt = (
