@@ -1,0 +1,46 @@
+from fastapi import APIRouter, Depends, status
+
+from app.api.dependencies import get_product_service
+from app.config import settings
+from app.core.schemas.product import ProductListResponse, ProductResponse
+from app.core.services.product import ProductService
+
+router = APIRouter(
+    prefix=settings.api.v1.products,
+    tags=["Products"],
+)
+
+
+@router.get(
+    "/",
+    response_model=ProductListResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def get_products(
+    product_service: ProductService = Depends(get_product_service),
+):
+    return await product_service.get_all_products()
+
+
+@router.get(
+    "/{product_id}",
+    response_model=ProductResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def get_product(
+    product_id: int,
+    product_service=Depends(get_product_service),
+):
+    return await product_service.get_product_by_id(product_id)
+
+
+@router.get(
+    "/category/{category_id}",
+    response_model=ProductListResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def get_products_by_category(
+    category_id: int,
+    product_service=Depends(get_product_service),
+):
+    return await product_service.get_products_by_category(category_id)
