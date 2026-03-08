@@ -69,8 +69,8 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5173",
         "http://127.0.0.1:3000",
     ]
-    static_dir: str = "static"
-    image_dir: str = "static/images"
+    static_dir: Path = BASE_DIR / "static"
+    image_dir: Path = BASE_DIR / "static" / "images"
     model_config = SettingsConfigDict(
         env_file=(
             BASE_DIR / ".env.template",
