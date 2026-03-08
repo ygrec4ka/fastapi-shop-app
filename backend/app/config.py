@@ -50,6 +50,7 @@ class DatabaseConfig(BaseModel):
 
 class ApiV1Prefix(BaseModel):
     prefix: str = "/v1"
+    cart: str = "/cart"
     categories: str = "/categories"
     products: str = "/products"
 
