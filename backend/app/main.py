@@ -35,6 +35,19 @@ app.mount("/static", StaticFiles(directory=settings.static_dir), name="static")
 app.include_router(api_router)
 
 
+@app.get("/")
+def root():
+    return {
+        "message": "Welcome to fastapi shop API",
+        "docs": "api/docs",
+    }
+
+
+@app.get("/")
+def health_check():
+    return {"message": "OK"}
+
+
 if __name__ == "__main__":
     uvicorn.run(
         "main:app",
