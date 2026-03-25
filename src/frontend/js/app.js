@@ -64,6 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
             bindEvents();
             console.log("Events bound successfully");
             await loadProducts();
+            await syncCartWithServer();
             updateCartUI();
             console.log("App initialization complete");
         } catch (err) {
@@ -148,34 +149,59 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================
     // CART LOGIC
     // ==========================================
-    window.addToCart = (productId) => {
-        if (!state.cart[productId]) {
-            state.cart[productId] = 1;
-        } else {
-            state.cart[productId]++;
+    window.addToCart = async (productId) => {
+        try {
+            const data = await ApiService.addToCart(productId, 1, state.cart);
+            state.cart = data.cart;
+            saveCart();
+            updateCartUI();
+            
+            const product = state.products.find(p => p.id === productId);
+            showToast(`Добавлено: ${product?.name || 'Товар'}`);
+        } catch (err) {
+            showToast('Ошибка корзины: ' + err.message, true);
         }
-        saveCart();
-        updateCartUI();
-        
-        const product = state.products.find(p => p.id === productId);
-        showToast(`Добавлено: ${product?.name || 'Товар'}`);
     };
 
-    window.removeFromCart = (productId) => {
-        delete state.cart[productId];
-        saveCart();
-        updateCartUI();
+    window.removeFromCart = async (productId) => {
+        try {
+            const data = await ApiService.removeFromCart(productId, state.cart);
+            state.cart = data.cart;
+            saveCart();
+            updateCartUI();
+        } catch (err) {
+            showToast('Ошибка удаления: ' + err.message, true);
+        }
     };
 
-    window.updateCartQuantity = (productId, delta) => {
-        if (!state.cart[productId]) return;
-        state.cart[productId] += delta;
-        if (state.cart[productId] <= 0) {
-            delete state.cart[productId];
+    window.updateCartQuantity = async (productId, delta) => {
+        const newQty = (state.cart[productId] || 1) + delta;
+        try {
+            if (newQty <= 0) {
+                return window.removeFromCart(productId);
+            }
+            const data = await ApiService.updateCart(productId, newQty, state.cart);
+            state.cart = data.cart;
+            saveCart();
+            updateCartUI();
+        } catch (err) {
+            showToast('Ошибка изменения: ' + err.message, true);
         }
-        saveCart();
-        updateCartUI();
     };
+
+    // New sync function
+    async function syncCartWithServer() {
+        try {
+            // Pass current state.cart to server
+            // Server will ignore it if logged in and use DB instead
+            const data = await ApiService.getCart(state.cart);
+            state.cart = data.cart_dict || {};
+            saveCart();
+            updateCartUI();
+        } catch (err) {
+            console.error("Cart sync failed:", err);
+        }
+    }
 
     function saveCart() {
         localStorage.setItem('shop_cart', JSON.stringify(state.cart));
@@ -323,11 +349,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function finalizeLogin(token, email) {
+    async function finalizeLogin(token, email) {
         localStorage.setItem('access_token', token);
         localStorage.setItem('user_email', email);
         state.user.email = email;
         
+        // Discard guest cart as requested and load user cart
+        state.cart = {};
+        saveCart();
+        
+        await syncCartWithServer();
         updateNavbarAuth();
         closeAuthModal();
         showToast('Добро пожаловать!');
@@ -336,8 +367,12 @@ document.addEventListener('DOMContentLoaded', () => {
     function logout() {
         localStorage.removeItem('access_token');
         localStorage.removeItem('user_email');
+        localStorage.removeItem('shop_cart'); // Clear cart on logout
         state.user.email = null;
+        state.cart = {}; 
+        
         updateNavbarAuth();
+        updateCartUI(); // Reset UI
         showToast('Вы успешно вышли из системы');
     }
 

@@ -4,6 +4,7 @@ from .user import User
 from .access_token import AccessToken
 from .category import Category
 from .product import Product
+from .cart import CartItem
 
 
 __all__ = [
@@ -13,4 +14,5 @@ __all__ = [
     "Product",
     "User",
     "AccessToken",
+    "CartItem",
 ]

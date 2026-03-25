@@ -1,11 +1,12 @@
 import logging
 import uvicorn
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from backend.core.config import settings
 from backend.api import router as api_router
+from backend.core.exceptions import EntityNotFoundError
 
 
 logging.basicConfig(
@@ -22,20 +23,12 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:8080",
-        "http://127.0.0.1:8080",
-        "http://localhost:8000",
-        "http://127.0.0.1:8000",
-    ],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
-from fastapi.responses import JSONResponse
-from backend.core.exceptions import EntityNotFoundError
 
 app.include_router(api_router)
 

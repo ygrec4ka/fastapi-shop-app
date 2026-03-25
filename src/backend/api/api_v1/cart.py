@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Optional
 
 from fastapi import APIRouter, status, Depends
 
@@ -6,6 +6,8 @@ from pydantic import BaseModel
 
 from backend.api.dependencies import get_cart_service
 from backend.core.config import settings
+from backend.core.authentication.fastapi_users import fastapi_users
+from backend.core.models import User
 from backend.core.schemas.cart import CartItemCreate, CartResponse, CartItemUpdate
 from backend.services.cart import CartService
 
@@ -13,6 +15,9 @@ router = APIRouter(
     prefix=settings.api.v1.cart,
     tags=["Cart"],
 )
+
+# Dependency for optional user
+optional_current_user = fastapi_users.current_user(optional=True)
 
 
 class AddToCartRequest(BaseModel):
@@ -33,12 +38,13 @@ class RemoveFromCartRequest(BaseModel):
 async def add_to_cart(
     request: AddToCartRequest,
     cart_service: CartService = Depends(get_cart_service),
+    user: Optional[User] = Depends(optional_current_user),
 ):
     item = CartItemCreate(
         product_id=request.product_id,
         quantity=request.quantity,
     )
-    updated_cart = cart_service.add_to_cart(request.cart, item)
+    updated_cart = await cart_service.add_to_cart(request.cart, item, user=user)
 
     return {"cart": updated_cart}
 
@@ -51,18 +57,20 @@ async def add_to_cart(
 async def get_cart(
     cart_data: Dict[int, int],
     cart_service: CartService = Depends(get_cart_service),
+    user: Optional[User] = Depends(optional_current_user),
 ):
 
-    return cart_service.get_cart_details(cart_data)
+    return await cart_service.get_cart_details(cart_data, user=user)
 
 
 @router.put("/update", status_code=status.HTTP_200_OK)
 async def update_cart_item(
     request: UpdateCartRequest,
     cart_service: CartService = Depends(get_cart_service),
+    user: Optional[User] = Depends(optional_current_user),
 ):
     item = CartItemUpdate(product_id=request.product_id, quantity=request.quantity)
-    updated_cart = cart_service.update_cart_item(request.cart, item)
+    updated_cart = await cart_service.update_cart_item(request.cart, item, user=user)
 
     return {"cart": updated_cart}
 
@@ -72,7 +80,8 @@ async def remove_from_cart(
     product_id: int,
     request: RemoveFromCartRequest,
     cart_service: CartService = Depends(get_cart_service),
+    user: Optional[User] = Depends(optional_current_user),
 ):
-    updated_cart = cart_service.remove_from_cart(request.cart, product_id)
+    updated_cart = await cart_service.remove_from_cart(request.cart, product_id, user=user)
 
     return {"cart": updated_cart}

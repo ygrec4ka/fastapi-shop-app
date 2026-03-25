@@ -20,6 +20,10 @@ class User(Base, IdIntPk, SQLAlchemyBaseUserTable[UserIdType]):
         "AccessToken", back_populates="user", cascade="all, delete-orphan"
     )
 
+    cart_items: Mapped[List["CartItem"]] = relationship(
+        "CartItem", back_populates="user", cascade="all, delete-orphan"
+    )
+
     @classmethod
     async def get_db(cls, session: "AsyncSession"):
         yield SQLAlchemyUserDatabase(session, cls)

@@ -36,7 +36,6 @@ class ProductService:
             .where(Product.id == product_id)
             .options(
                 joinedload(Product.category),
-                selectinload(Product.image_url),
             )
         )
 
@@ -49,6 +48,19 @@ class ProductService:
 
         self.logger.debug("Product found: %s", product_id)
         return product
+
+    async def get_multiple_products_by_ids(self, product_ids: List[int]) -> Sequence[Product]:
+        self.logger.debug("Fetching multiple products: %s", product_ids)
+        if not product_ids:
+            return []
+        
+        stmt = (
+            select(Product)
+            .where(Product.id.in_(product_ids))
+            .options(joinedload(Product.category))
+        )
+        result: Result = await self.session.execute(stmt)
+        return result.unique().scalars().all()
 
     async def get_all_products(self) -> Sequence[Product]:
         self.logger.debug("Starting to get all products")

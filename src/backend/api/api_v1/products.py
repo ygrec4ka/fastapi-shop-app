@@ -19,7 +19,11 @@ router = APIRouter(
 async def get_products(
     product_service: ProductService = Depends(get_product_service),
 ):
-    return await product_service.get_all_products()
+    products = await product_service.get_all_products()
+    return {
+        "items": products,
+        "total": len(products),
+    }
 
 
 @router.get(
