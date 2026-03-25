@@ -1,10 +1,9 @@
 import logging
 
-from fastapi import HTTPException, status
-
 from sqlalchemy import select, Result, Sequence
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.core.exceptions import EntityNotFoundError
 from backend.core.schemas.category import CategoryCreate
 from backend.core.models import Category
 
@@ -33,10 +32,7 @@ class CategoryService:
         category = await self.session.get(Category, category_id)
         if not category:
             self.logger.warning("Category not found: %s", category_id)
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Category not found with id: {category_id}",
-            )
+            raise EntityNotFoundError(f"Category not found with id: {category_id}")
 
         self.logger.debug("Category found: %s", category_id)
         return category
@@ -58,10 +54,7 @@ class CategoryService:
         category = await self.session.get(Category, category_id)
         if not category:
             self.logger.warning("Category not found: %s", category_id)
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Category not found with id: {category_id}",
-            )
+            raise EntityNotFoundError(f"Category not found with id: {category_id}")
         self.logger.debug("Category found: %s", category_id)
 
         await self.session.delete(category)

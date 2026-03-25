@@ -1,11 +1,11 @@
 import logging
 from typing import Sequence, List
 
-from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, Result
 from sqlalchemy.orm import joinedload, selectinload
 
+from backend.core.exceptions import EntityNotFoundError
 from backend.core.schemas.product import ProductCreate
 from backend.core.models import Product, Category
 
@@ -45,10 +45,7 @@ class ProductService:
 
         if not product:
             self.logger.warning("Product not found: %s", product_id)
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Product not found with id: {product_id}",
-            )
+            raise EntityNotFoundError(f"Product not found with id: {product_id}")
 
         self.logger.debug("Product found: %s", product_id)
         return product
@@ -72,10 +69,7 @@ class ProductService:
         category = await self.session.get(Category, category_id)
         if not category:
             self.logger.warning("Category not found: %s", category_id)
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Category with id: {category_id} not found",
-            )
+            raise EntityNotFoundError(f"Category with id: {category_id} not found")
         self.logger.debug("Category found: %s", category_id)
 
         stmt = (

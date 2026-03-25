@@ -1,9 +1,9 @@
 import logging
 from typing import Dict
 
-from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.core.exceptions import EntityNotFoundError
 from backend.core.schemas.cart import CartItemCreate, CartItemUpdate, CartItem, CartResponse
 from backend.services.product import ProductService
 
@@ -26,10 +26,8 @@ class CartService:
         product = await self.product_service.get_product_by_id(item.product_id)
 
         if not product:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Product {item.product_id} not found",
-            )
+            raise EntityNotFoundError(f"Product {item.product_id} not found")
+            
         self.logger.info(
             "Added %s of product %s to cart",
             item.quantity,
@@ -47,10 +45,8 @@ class CartService:
         item: CartItemUpdate,
     ) -> Dict[int, int]:
         if item.product_id not in cart_data:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Product_id: {item.product_id} not in cart",
-            )
+            raise EntityNotFoundError(f"Product_id: {item.product_id} not in cart")
+            
         cart_data[item.product_id] = item.quantity
         self.logger.info(
             "Updated product_id: %s quantity to %s", item.product_id, item.quantity

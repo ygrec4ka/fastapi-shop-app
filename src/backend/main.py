@@ -34,7 +34,18 @@ app.add_middleware(
 )
 
 
+from fastapi.responses import JSONResponse
+from backend.core.exceptions import EntityNotFoundError
+
 app.include_router(api_router)
+
+
+@app.exception_handler(EntityNotFoundError)
+async def entity_not_found_exception_handler(request, exc: EntityNotFoundError):
+    return JSONResponse(
+        status_code=404,
+        content={"detail": exc.message},
+    )
 
 
 if __name__ == "__main__":
