@@ -43,7 +43,7 @@ async def add_to_cart(
     return {"cart": updated_cart}
 
 
-@router.get(
+@router.post(
     "/cart",
     response_model=CartResponse,
     status_code=status.HTTP_200_OK,
