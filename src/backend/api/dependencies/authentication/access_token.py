@@ -1,6 +1,5 @@
-from fastapi import Depends
-
 from typing import Annotated, TYPE_CHECKING
+from fastapi import Depends
 
 from backend.core.models.access_token import AccessToken
 from backend.core.models import db_helper

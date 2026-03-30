@@ -6,18 +6,16 @@ from pydantic import BaseModel
 
 from backend.api.dependencies import get_cart_service
 from backend.core.config import settings
-from backend.core.authentication.fastapi_users import fastapi_users
+from backend.api.dependencies.authentication.users import optional_current_user
 from backend.core.models import User
 from backend.core.schemas.cart import CartItemCreate, CartResponse, CartItemUpdate
 from backend.services.cart import CartService
+
 
 router = APIRouter(
     prefix=settings.api.v1.cart,
     tags=["Cart"],
 )
-
-# Dependency for optional user
-optional_current_user = fastapi_users.current_user(optional=True)
 
 
 class AddToCartRequest(BaseModel):
@@ -82,6 +80,8 @@ async def remove_from_cart(
     cart_service: CartService = Depends(get_cart_service),
     user: Optional[User] = Depends(optional_current_user),
 ):
-    updated_cart = await cart_service.remove_from_cart(request.cart, product_id, user=user)
+    updated_cart = await cart_service.remove_from_cart(
+        request.cart, product_id, user=user
+    )
 
     return {"cart": updated_cart}

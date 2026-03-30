@@ -1,11 +1,4 @@
-from fastapi_users.authentication import AuthenticationBackend
+from backend.core.authentication.backend import authentication_backend
 
-from backend.core.authentication.transport import bearer_transport
-from .strategy import get_database_strategy
-
-
-authentication_backend = AuthenticationBackend(
-    name="access-token-db",
-    transport=bearer_transport,
-    get_strategy=get_database_strategy,
-)
+def get_authentication_backend():
+    return authentication_backend
