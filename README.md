@@ -1,121 +1,126 @@
 # 🛒 FastAPI Shop
 
-![Python Version](https://img.shields.io/badge/python-3.12%2B-blue.svg)
+![Python Version](https://img.shields.io/badge/python-3.13%2B-blue.svg)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.133.0-009688.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)
 
-## 🚀 О проекте
+## 🚀 About the Project
 
-**FastAPI Shop** — это современный, быстрый и масштабируемый backend для интернет-магазина, построенный на базе асинхронного фреймворка FastAPI. Проект решает проблему долгого старта при разработке e-commerce приложений, предоставляя готовое REST API для управления каталогом товаров, корзиной покупок и безопасной аутентификацией пользователей "из коробки".
+**FastAPI Shop** provides a robust foundation for building online stores. It takes care of the routine setup of database connectivity, logging, configuration, and security, allowing developers to focus immediately on their core business logic. Whether you are building a small shop or a complex marketplace, this boilerplate offers the flexibility and performance needed for modern web development.
 
-## ✨ Ключевые особенности
+## ✨ Key Features
 
-* 🔐 **Безопасная аутентификация:** Полноценное управление пользователями (регистрация, логин, восстановление пароля) с использованием JWT-токенов на базе `fastapi-users`.
-* 📦 **Управление каталогом:** Удобные CRUD-операции для категорий и товаров с поддержкой фильтрации.
-* 🛒 **Умная корзина:** API для добавления товаров, изменения их количества, удаления и автоматического подсчета итоговой стоимости.
-* ⚡ **Высокая производительность:** Полностью асинхронная работа с базой данных благодаря связке `SQLAlchemy 2.0` и `asyncpg`.
-* 🔄 **Миграции БД:** Автоматизированное управление структурой базы данных с помощью `Alembic`.
+* 🔐 **Secure Authentication:** Full user management (registration, login, password recovery) using JWT tokens based on `fastapi-users`.
+* 📦 **Catalog Management:** Robust CRUD operations for categories and products with built-in filtering support.
+* 🛒 **Smart Shopping Cart:** Full-featured API for managing cart items, adjusting quantities, and automated total cost calculation.
+* ⚡ **High Performance:** Fully asynchronous database interaction powered by `SQLAlchemy 2.0` and `asyncpg`.
+* 🔄 **Database Migrations:** Seamless schema management and automated versioning using `Alembic`.
 
-## 🛠 Стек технологий
+## 🛠 Tech Stack
 
-* **Язык:** [Python 3.12+](https://www.python.org/)
-* **Фреймворк:** [FastAPI](https://fastapi.tiangolo.com/)
-* **База данных:** [PostgreSQL](https://www.postgresql.org/) (драйвер `asyncpg`)
-* **ORM & Миграции:** [SQLAlchemy](https://www.sqlalchemy.org/) (async) и [Alembic](https://alembic.sqlalchemy.org/)
-* **Аутентификация:** [FastAPI Users](https://fastapi-users.github.io/fastapi-users/)
-* **Менеджер зависимостей:** [uv](https://docs.astral.sh/uv/)
+The boilerplate includes a modern and high-performance stack:
 
-## 🧪 Запуск и тестирование проекта
+* 🐍 **Python >= 3.13**
+* ⚡ **FastAPI** — modern web framework.
+* 🛡️ **FastAPI-Users** — ready-made Auth implementation (JWT / Database tokens).
+* 🗄️ **SQLAlchemy 2.0 (Asyncio)** — next-generation ORM.
+* 🐘 **Asyncpg** — the fastest asynchronous PostgreSQL driver.
+* 🔄 **Alembic** — migration management (already configured with async template).
+* ✅ **Pydantic v2 & Pydantic-Settings** — data validation and convenient configuration management.
+* 🚀 **Uvicorn** — high-performance ASGI server.
+* 📦 **uv** — lightning-fast package manager.
 
-Я предусмотрел два основных способа работы с проектом. Оба способа запускаются локально на вашем компьютере, но различаются степенью изоляции.
+## 🧪 Installation & Running
 
-### Подготовка (Общее для всех способов)
-1. **Склонируйте репозиторий:**
+I provide two main ways to work with the project. Both methods run locally but differ in the level of environment isolation.
+
+### Preparation (Common for both methods)
+1. **Clone the repository:**
    ```bash
    git clone https://github.com/ygrec4ka/fastapi-shop-app.git
    cd fastapi-shop-app
    ```
-2. **Настройте переменные окружения:**
-   Скопируйте шаблон:
+2. **Setup environment variables:**
+   Copy the template:
    ```bash
    cp .env.template .env
    ```
-   *Отредактируйте `.env`, установив свои пароли и выбрав нужный URL базы данных (для Docker или Local).*
+   *Edit `.env` to set your passwords and choose the correct database URL (Docker or Local).*
 
 ---
 
-### Способ 1: Полная изоляция через Docker 🐳 (Рекомендуется)
+### Method 1: Full Isolation via Docker 🐳 (Recommended)
 
-В этом режиме всё (база данных, бэкенд, фронтенд, pgAdmin) запускается в контейнерах. Вам не нужно специально устанавливать Python или PostgreSQL на компьютер.
+In this mode, everything (database, backend, frontend, pgAdmin) runs in containers. You don't need to have Python or PostgreSQL installed on your host machine.
 
-1. **Соберите и запустите контейнеры:**
+1. **Build and start containers:**
    ```bash
    docker compose up -d --build
    ```
-2. **Примените миграции (ОБЯЗАТЕЛЬНО):**
-   Это создаст таблицы в базе данных. Выполняется один раз при старте или при каждом изменении моделей:
+2. **Apply migrations (REQUIRED):**
+   This creates the database tables. Run this once at the start or whenever models change:
    ```bash
    docker compose exec backend alembic upgrade head
    ```
-3. **Наполните базу тестовыми данными (Сидинг):**
-   Чтобы не кликать по пустому сайту, я создал скрипт, который добавит 50 товаров и категории:
+3. **Seed the database:**
+   To populate the store with initial data (50 items and categories), run the seeding script:
    ```bash
    docker compose exec backend python -m backend.utils.seed_db --reset
    ```
 
 ---
 
-### Способ 2: Разработка через PyCharm / IDE 💻
+### Method 2: Development via IDE 💻
 
-Этот способ удобен для активной кодинг-сессии и отладки (Debugging).
+This method is convenient for active coding sessions and debugging.
 
-1. **Установите зависимости:**
-   Я использую современный менеджер пакетов `uv`. Выполните синхронизацию, чтобы создать виртуальное окружение:
+1. **Install dependencies:**
+   I use the modern package manager `uv`. Sync your environment to create a virtual environment:
    ```bash
    uv sync
    ```
-   *Это создаст папку `.venv` и установит все зависимости из `pyproject.toml`.*
+   *This will create a `.venv` folder and install all dependencies from `pyproject.toml`.*
 
-2. **Подготовьте локальную базу данных:**
-   - Установите PostgreSQL.
-   - Создайте **пустую базу данных** и пользователя. 
-   - **Важно:** Имя базы, имя пользователя и пароль должны **строго совпадать** с тем, что вы указали в файле `.env` (секция `POSTGRES_USER`, `POSTGRES_DB` и т.д.).
+2. **Prepare a local database:**
+   - Install PostgreSQL.
+   - Create an **empty database** and a user.
+   - **Important:** The database name, username, and password must **strictly match** what you specified in the `.env` file (`POSTGRES_USER`, `POSTGRES_DB`, etc.).
 
-3. **Настройте `.env`:**
-   Убедитесь, что `APP_CONFIG__DB__URL` указывает на `localhost:5432`, а не на `db:5432`.
+3. **Configure `.env`:**
+   Ensure `APP_CONFIG__DB__URL` points to `localhost:5432` instead of `db:5432`.
 
-4. **Запустите миграции локально:**
+4. **Run migrations locally:**
    ```bash
    uv run alembic upgrade head
    ```
 
-5. **Запуск сервера:**
-   В PyCharm создайте конфигурацию "FastAPI" (или Python script для `backend.main`) или запустите командой:
+5. **Start the server:**
+   In your IDE (e.g., PyCharm), create a "FastAPI" run configuration or run the command:
    ```bash
    uv run uvicorn backend.main:app --reload
    ```
 
 ---
 
-## 🏗 Миграции (Важное примечание)
+## 🏗 Migrations (Important Note)
 
-База данных не знает о ваших изменениях в `models/*.py` автоматически.
-- Если вы добавили новую сущность (таблицу) или поле — создайте новую миграцию:
-  ```bash
-  # В Docker:
-  docker compose exec backend alembic revision --autogenerate -m "Add new table"
-  # Локально:
-  uv run alembic revision --autogenerate -m "Add new table"
-  ```
-- И не забудьте применить её через `alembic upgrade head`.
+The database does not automatically know about changes in your `models/*.py` files.
+- If you add a new entity (table) or field, create a new migration:
+   ```bash
+   # In Docker:
+   docker compose exec backend alembic revision --autogenerate -m "Add new table"
+   # Locally:
+   uv run alembic revision --autogenerate -m "Add new table"
+   ```
+- Don't forget to apply it using `alembic upgrade head`.
 
-## 💻 Использование
+## 💻 Usage
 
-После запуска сервера:
-- **Swagger API:** [http://localhost:8000/docs](http://localhost:8000/docs) — полный список эндпоинтов и возможность их протестировать.
-- **Frontend (Магазин):** [http://localhost:8080](http://localhost:8080) — визуальная часть.
-- **pgAdmin:** [http://localhost:5050](http://localhost:5050) — управление базой данных.
+After starting the server:
+- **Swagger API:** [http://localhost:8000/docs](http://localhost:8000/docs) — full list of endpoints and documentation.
+- **Frontend (Store):** [http://localhost:8080](http://localhost:8080) — the user interface.
+- **pgAdmin:** [http://localhost:5050](http://localhost:5050) — database management interface.
 
-## 📫 Контакты
+## 📫 Contacts
 * **GitHub:** [@ygrec4ka](https://github.com/ygrec4ka)
