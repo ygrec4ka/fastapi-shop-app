@@ -33,7 +33,7 @@ async def get_products(
 )
 async def get_product(
     product_id: int,
-    product_service=Depends(get_product_service),
+    product_service: ProductService = Depends(get_product_service),
 ):
     return await product_service.get_product_by_id(product_id)
 
@@ -45,6 +45,10 @@ async def get_product(
 )
 async def get_products_by_category(
     category_id: int,
-    product_service=Depends(get_product_service),
+    product_service: ProductService = Depends(get_product_service),
 ):
-    return await product_service.get_products_by_category(category_id)
+    products = await product_service.get_products_by_category(category_id)
+    return {
+        "items": products,
+        "total": len(products),
+    }

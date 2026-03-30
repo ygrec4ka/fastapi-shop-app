@@ -14,7 +14,6 @@ if TYPE_CHECKING:
     from backend.core.models import User
 
 class AccessToken(Base, SQLAlchemyBaseAccessTokenTable[int]):
-    pass
 
     @declared_attr
     def user_id(cls) -> Mapped[int]:
@@ -22,7 +21,6 @@ class AccessToken(Base, SQLAlchemyBaseAccessTokenTable[int]):
             Integer, ForeignKey("users.id", ondelete="cascade"), nullable=False
         )
 
-    # Добавляем обратную связь
     @declared_attr
     def user(cls) -> Mapped["User"]:
         return relationship("User", back_populates="access_tokens")

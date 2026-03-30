@@ -15,11 +15,7 @@ logging.basicConfig(
 )
 
 
-app = FastAPI(
-    title=settings.app_name,
-    debug=settings.debug,
-)
-
+app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
@@ -28,7 +24,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 app.include_router(api_router)
 

@@ -5,7 +5,6 @@ from sqlalchemy import select, delete
 from backend.core.models.db_helper import db_helper
 from backend.core.models import Product, Category
 
-# Mock data
 CATEGORIES_DATA = [
     {"name": "Electronics", "slug": "electronics"},
     {"name": "Clothing", "slug": "clothing"},
@@ -32,7 +31,6 @@ async def seed(reset: bool = False):
             await session.execute(delete(Category))
             await session.commit()
 
-        # 1. Check if categories exist, if not - add them
         result = await session.execute(select(Category))
         existing_categories = result.scalars().all()
         
@@ -47,7 +45,6 @@ async def seed(reset: bool = False):
         else:
             print(f"Categories already exist: {len(existing_categories)}")
 
-        # 2. Add products (up to 50)
         result = await session.execute(select(Product))
         existing_products_count = len(result.scalars().all())
         

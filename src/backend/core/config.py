@@ -54,7 +54,7 @@ class AccessToken(BaseModel):
     lifetime_seconds: int = 3600
     reset_password_token_secret: str
     verification_token_secret: str
-    
+
 
 class ApiV1Prefix(BaseModel):
     auth: str = "/auth"
@@ -78,19 +78,15 @@ class ApiPrefix(BaseModel):
 
 
 class Settings(BaseSettings):
-    app_name: str = "FastAPI Shop"
-    debug: bool = True
-
     model_config = SettingsConfigDict(
         env_file=(
             BASE_DIR / ".env.template",
             BASE_DIR / ".env",
-
         ),
         case_sensitive=False,
         env_nested_delimiter="__",
         env_prefix="APP_CONFIG__",
-        extra="ignore"
+        extra="ignore",
     )
 
     db: DatabaseConfig

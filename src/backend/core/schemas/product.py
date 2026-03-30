@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional, List
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 from backend.core.schemas.category import CategoryResponse
 
@@ -29,6 +29,8 @@ class ProductCreate(ProductBase):
 
 
 class ProductResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int = Field(..., description="Product ID")
     name: str
     description: Optional[str]

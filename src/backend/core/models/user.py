@@ -11,7 +11,7 @@ from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTable, SQLAlchemyUserD
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
-    from backend.core.config import AccessToken
+    from backend.core.models import AccessToken
 
 
 class User(Base, IdIntPk, SQLAlchemyBaseUserTable[UserIdType]):

@@ -12,8 +12,6 @@ router = APIRouter(
 )
 
 
-# /login
-# /logout
 router.include_router(
     router=fastapi_users.get_auth_router(
         authentication_backend,
@@ -21,7 +19,6 @@ router.include_router(
 )
 
 
-# /register
 router.include_router(
     router=fastapi_users.get_register_router(
         UserRead,

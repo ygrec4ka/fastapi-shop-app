@@ -1,7 +1,7 @@
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.api.dependencies import get_product_service
+from backend.api.dependencies.product import get_product_service
 
 from backend.core.models import db_helper
 

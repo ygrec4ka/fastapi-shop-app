@@ -1,13 +1,15 @@
 import logging
-from typing import Dict, Optional, List
+from typing import Dict, Optional
 from sqlalchemy import select, delete
-from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.models import CartItem as CartItemModel, User
 from backend.core.exceptions import EntityNotFoundError
 from backend.core.schemas.cart import CartItemCreate, CartItemUpdate, CartItem, CartResponse
 from backend.services.product import ProductService
+
+log = logging.getLogger(__name__)
+
 
 class CartService:
     def __init__(
@@ -16,11 +18,9 @@ class CartService:
         product_service: ProductService,
     ):
         self.session = session
-        self.logger = logging.getLogger(__name__)
         self.product_service = product_service
 
     async def get_user_cart_dict(self, user: User) -> Dict[int, int]:
-        """Fetch user cart from DB and return it as a {product_id: quantity} dict."""
         stmt = select(CartItemModel).where(CartItemModel.user_id == user.id)
         result = await self.session.execute(stmt)
         items = result.scalars().all()
@@ -32,17 +32,16 @@ class CartService:
         item: CartItemCreate,
         user: Optional[User] = None,
     ) -> Dict[int, int]:
-        product = await self.product_service.get_product_by_id(item.product_id)
+        await self.product_service.get_product_by_id(item.product_id)
 
         if user:
-            # Persistent DB logic
             stmt = select(CartItemModel).where(
                 CartItemModel.user_id == user.id,
                 CartItemModel.product_id == item.product_id
             )
             result = await self.session.execute(stmt)
             cart_item = result.scalar_one_or_none()
-            
+
             if cart_item:
                 cart_item.quantity += item.quantity
             else:
@@ -52,14 +51,13 @@ class CartService:
                     quantity=item.quantity
                 )
                 self.session.add(cart_item)
-            
+
             await self.session.commit()
             return await self.get_user_cart_dict(user)
-        else:
-            # Guest logic
-            cart_data.setdefault(item.product_id, 0)
-            cart_data[item.product_id] += item.quantity
-            return cart_data
+
+        cart_data.setdefault(item.product_id, 0)
+        cart_data[item.product_id] += item.quantity
+        return cart_data
 
     async def update_cart_item(
         self,
@@ -74,26 +72,26 @@ class CartService:
             )
             result = await self.session.execute(stmt)
             cart_item = result.scalar_one_or_none()
-            
+
             if not cart_item:
                 raise EntityNotFoundError("Item not found in user cart")
-            
+
             if item.quantity <= 0:
                 await self.session.delete(cart_item)
             else:
                 cart_item.quantity = item.quantity
-            
+
             await self.session.commit()
             return await self.get_user_cart_dict(user)
+
+        if item.product_id not in cart_data:
+            raise EntityNotFoundError(f"Product_id: {item.product_id} not in cart")
+
+        if item.quantity <= 0:
+            cart_data.pop(item.product_id, None)
         else:
-            if item.product_id not in cart_data:
-                raise EntityNotFoundError(f"Product_id: {item.product_id} not in cart")
-            
-            if item.quantity <= 0:
-                cart_data.pop(item.product_id, None)
-            else:
-                cart_data[item.product_id] = item.quantity
-            return cart_data
+            cart_data[item.product_id] = item.quantity
+        return cart_data
 
     async def remove_from_cart(
         self,
@@ -109,9 +107,9 @@ class CartService:
             await self.session.execute(stmt)
             await self.session.commit()
             return await self.get_user_cart_dict(user)
-        else:
-            cart_data.pop(product_id, None)
-            return cart_data
+
+        cart_data.pop(product_id, None)
+        return cart_data
 
     async def get_cart_details(
         self,
@@ -149,8 +147,8 @@ class CartService:
                 total_items += quantity
 
         return CartResponse(
-            items=cart_items, 
-            total=round(total_price, 2), 
+            items=cart_items,
+            total=round(total_price, 2),
             items_count=total_items,
             cart_dict=effective_cart
         )

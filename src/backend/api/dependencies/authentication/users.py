@@ -1,4 +1,4 @@
-from typing import Annotated, TYPE_CHECKING, Optional
+from typing import Annotated, TYPE_CHECKING
 
 from fastapi import Depends
 
@@ -19,7 +19,4 @@ async def get_users_db(
         yield db
 
 
-current_user = fastapi_users.current_user(active=True)
 optional_current_user = fastapi_users.current_user(optional=True)
-active_user = fastapi_users.current_user(active=True)
-superuser = fastapi_users.current_user(active=True, superuser=True)
