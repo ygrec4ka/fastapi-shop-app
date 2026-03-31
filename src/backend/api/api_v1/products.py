@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, status
 
-from backend.api.dependencies import get_product_service
+from backend.api.dependencies.product import get_product_service
 from backend.core.config import settings
 from backend.core.schemas.product import ProductListResponse, ProductResponse
 from backend.services.product import ProductService

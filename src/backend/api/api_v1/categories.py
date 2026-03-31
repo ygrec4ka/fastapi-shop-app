@@ -3,9 +3,10 @@ from typing import List
 from fastapi import APIRouter, status, Depends
 
 from backend.core.config import settings
-from backend.api.dependencies import get_category_service
+from backend.api.dependencies.category import get_category_service
 from backend.core.schemas.category import CategoryResponse
 from backend.services.category import CategoryService
+
 
 router = APIRouter(
     prefix=settings.api.v1.categories,

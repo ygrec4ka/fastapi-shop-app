@@ -1,8 +1,16 @@
+import sys
+from pathlib import Path
+
 import logging
 import uvicorn
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+
+SRC_DIR = Path(__file__).resolve().parent.parent
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
 from backend.core.config import settings
 from backend.api import router as api_router

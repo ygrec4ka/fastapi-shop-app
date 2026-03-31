@@ -1,28 +1,22 @@
-from typing import (
-    TYPE_CHECKING,
-    Annotated,
-)
-
 from fastapi import Depends
-from fastapi_users.authentication.strategy.db import (
-    DatabaseStrategy,
-)
+from typing import Annotated, TYPE_CHECKING
 
-from backend.core.config import settings
-from .access_tokens import get_access_tokens_db
+from fastapi_users.authentication.strategy import AccessTokenDatabase, DatabaseStrategy
+
+from backend.api.dependencies.authentication.access_tokens import get_access_tokens_db
+from backend.core import settings
 
 if TYPE_CHECKING:
     from backend.core.models import AccessToken
-    from fastapi_users.authentication.strategy.db import AccessTokenDatabase
 
 
 def get_database_strategy(
-    access_tokens_db: Annotated[
+    access_token_db: Annotated[
         "AccessTokenDatabase[AccessToken]",
         Depends(get_access_tokens_db),
     ],
-) -> DatabaseStrategy:
+):
     return DatabaseStrategy(
-        database=access_tokens_db,
+        database=access_token_db,
         lifetime_seconds=settings.access_token.lifetime_seconds,
     )

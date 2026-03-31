@@ -4,9 +4,9 @@ from fastapi import APIRouter, status, Depends
 
 from pydantic import BaseModel
 
-from backend.api.dependencies import get_cart_service
+from backend.api.dependencies.cart import get_cart_service
 from backend.core.config import settings
-from backend.api.dependencies.authentication.users import optional_current_user
+from backend.core.authentication.fastapi_users import optional_current_user
 from backend.core.models import User
 from backend.core.schemas.cart import CartItemCreate, CartResponse, CartItemUpdate
 from backend.services.cart import CartService
