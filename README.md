@@ -122,5 +122,5 @@ After starting the server:
 - **Frontend (Store):** [http://localhost:8080](http://localhost:8080) — the user interface.
 - **pgAdmin:** [http://localhost:5050](http://localhost:5050) — database management interface.
 
-## 📫 Contacts
-* **GitHub:** [@ygrec4ka](https://github.com/ygrec4ka)
+
+
