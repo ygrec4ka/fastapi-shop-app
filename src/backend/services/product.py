@@ -1,5 +1,5 @@
 import logging
-from typing import Sequence, List
+from typing import Sequence, List, Optional, Tuple
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, Result
@@ -53,17 +53,33 @@ class ProductService:
         result: Result = await self.session.execute(stmt)
         return result.unique().scalars().all()
 
-    async def get_all_products(self) -> Sequence[Product]:
+    async def get_all_products(
+        self, cursor: Optional[int] = None, limit: int = 20
+    ) -> Tuple[Sequence[Product], Optional[int]]:
         stmt = (
             select(Product)
             .options(joinedload(Product.category))
-            .order_by(Product.created_at.desc())
+            .order_by(Product.id.desc())
         )
 
-        result: Result = await self.session.execute(stmt)
-        return result.unique().scalars().all()
+        if cursor:
+            stmt = stmt.where(Product.id < cursor)
 
-    async def get_products_by_category(self, category_id: int) -> Sequence[Product]:
+        stmt = stmt.limit(limit + 1)
+
+        result: Result = await self.session.execute(stmt)
+        products = result.unique().scalars().all()
+        
+        next_cursor = None
+        if len(products) > limit:
+            next_cursor = products[limit].id
+            products = products[:limit]
+
+        return products, next_cursor
+
+    async def get_products_by_category(
+        self, category_id: int, cursor: Optional[int] = None, limit: int = 20
+    ) -> Tuple[Sequence[Product], Optional[int]]:
         category = await self.session.get(Category, category_id)
         if not category:
             raise EntityNotFoundError(f"Category with id: {category_id} not found")
@@ -72,8 +88,21 @@ class ProductService:
             select(Product)
             .where(Product.category_id == category_id)
             .options(joinedload(Product.category))
-            .order_by(Product.created_at.desc())
+            .order_by(Product.id.desc())
         )
 
+        if cursor:
+            stmt = stmt.where(Product.id < cursor)
+
+        # Fetch limit + 1 to check if there is a next page
+        stmt = stmt.limit(limit + 1)
+
         result: Result = await self.session.execute(stmt)
-        return result.unique().scalars().all()
+        products = result.unique().scalars().all()
+        
+        next_cursor = None
+        if len(products) > limit:
+            next_cursor = products[limit].id
+            products = products[:limit]
+
+        return products, next_cursor
