@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, status
+from typing import Optional
+from fastapi import APIRouter, Depends, status, Query
 
 from backend.api.dependencies.product import get_product_service
 from backend.core.config import settings
@@ -17,12 +18,15 @@ router = APIRouter(
     status_code=status.HTTP_200_OK,
 )
 async def get_products(
+    cursor: Optional[int] = Query(None, description="Cursor for pagination"),
+    limit: int = Query(20, ge=1, le=100, description="Items per page"),
     product_service: ProductService = Depends(get_product_service),
 ):
-    products = await product_service.get_all_products()
+    products, next_cursor = await product_service.get_all_products(cursor, limit)
     return {
         "items": products,
         "total": len(products),
+        "next_cursor": next_cursor,
     }
 
 
@@ -45,10 +49,13 @@ async def get_product(
 )
 async def get_products_by_category(
     category_id: int,
+    cursor: Optional[int] = Query(None, description="Cursor for pagination"),
+    limit: int = Query(20, ge=1, le=100, description="Items per page"),
     product_service: ProductService = Depends(get_product_service),
 ):
-    products = await product_service.get_products_by_category(category_id)
+    products, next_cursor = await product_service.get_products_by_category(category_id, cursor, limit)
     return {
         "items": products,
         "total": len(products),
+        "next_cursor": next_cursor,
     }
