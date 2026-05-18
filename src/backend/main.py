@@ -1,14 +1,11 @@
 import logging
-import uvicorn
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 
 
-from core.config import settings
-from api import router as api_router
-from core.exceptions import EntityNotFoundError
+from backend.core.config import settings
+from backend.api import router as api_router
 
 
 logging.basicConfig(
