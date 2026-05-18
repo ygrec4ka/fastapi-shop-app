@@ -4,7 +4,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // STATE
     let state = {
         products: [],
-        cart: JSON.parse(localStorage.getItem('shop_cart')) || {}, // { product_id: quantity }
+        nextCursor: null,
+        isLoadingMore: false,
+        cart: [], // Array of cart items from server
+        cartCount: 0,
+        cartTotal: 0,
         user: { email: localStorage.getItem('user_email') || null },
         authMode: 'login' // 'login' or 'register'
     };
@@ -15,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
         productsGrid: document.getElementById('products-grid'),
         loadingProducts: document.getElementById('loading-products'),
         emptyProducts: document.getElementById('products-empty'),
+        loadMoreBtn: document.getElementById('load-more-btn'),
         toast: document.getElementById('toast'),
         toastMessage: document.getElementById('toast-message'),
         
@@ -64,8 +69,11 @@ document.addEventListener('DOMContentLoaded', () => {
             bindEvents();
             console.log("Events bound successfully");
             await loadProducts();
-            await syncCartWithServer();
-            updateCartUI();
+            if (state.user.email) {
+                await fetchCart();
+            } else {
+                updateCartUI(); // Reset UI for guest
+            }
             console.log("App initialization complete");
         } catch (err) {
             console.error("Error during app initialization:", err);
@@ -94,36 +102,72 @@ document.addEventListener('DOMContentLoaded', () => {
         els.cartToggleBtn.addEventListener('click', openCart);
         els.cartCloseBtn.addEventListener('click', closeCart);
         els.backdrop.addEventListener('click', () => { closeCart(); closeAuthModal(); });
+
+        // Load More Products
+        if (els.loadMoreBtn) {
+             els.loadMoreBtn.addEventListener('click', loadMoreProducts);
+        }
     }
 
     // ==========================================
     // CATALOG & PRODUCTS LOGIC
     // ==========================================
-    async function loadProducts() {
-        els.loadingProducts.classList.remove('hidden');
-        els.productsGrid.innerHTML = '';
-        els.emptyProducts.classList.add('hidden');
+    async function loadProducts(reset = true) {
+        if (reset) {
+            state.products = [];
+            state.nextCursor = null;
+            els.productsGrid.innerHTML = '';
+            els.emptyProducts.classList.add('hidden');
+            els.loadingProducts.classList.remove('hidden');
+            if (els.loadMoreBtn) els.loadMoreBtn.classList.add('hidden');
+        } else {
+            state.isLoadingMore = true;
+            if (els.loadMoreBtn) {
+                 els.loadMoreBtn.disabled = true;
+                 els.loadMoreBtn.innerHTML = 'Загрузка...';
+            }
+        }
 
         try {
-            // Using our ApiService
-            const response = await ApiService.getProducts();
-            state.products = response.items || [];
+            const response = await ApiService.getProducts(state.nextCursor);
             
-            if (state.products.length === 0) {
-                els.emptyProducts.classList.remove('hidden');
-            } else {
-                renderProducts();
+            if (response.items && response.items.length > 0) {
+                 state.products = [...state.products, ...response.items];
+                 state.nextCursor = response.next_cursor;
+                 renderProducts(response.items, !reset);
+
+                 if (state.nextCursor && els.loadMoreBtn) {
+                     els.loadMoreBtn.classList.remove('hidden');
+                 } else if (els.loadMoreBtn) {
+                     els.loadMoreBtn.classList.add('hidden');
+                 }
+            } else if (reset) {
+                 els.emptyProducts.classList.remove('hidden');
             }
+
         } catch (error) {
             console.error("Error loading products:", error);
             showToast('Ошибка загрузки товаров: ' + error.message, true);
         } finally {
-            els.loadingProducts.classList.add('hidden');
+            if (reset) {
+                els.loadingProducts.classList.add('hidden');
+            } else {
+                state.isLoadingMore = false;
+                if (els.loadMoreBtn) {
+                     els.loadMoreBtn.disabled = false;
+                     els.loadMoreBtn.innerHTML = 'Загрузить еще';
+                }
+            }
         }
     }
 
-    function renderProducts() {
-        els.productsGrid.innerHTML = state.products.map(product => `
+    async function loadMoreProducts() {
+        if (!state.nextCursor || state.isLoadingMore) return;
+        await loadProducts(false);
+    }
+
+    function renderProducts(productsToRender, append = false) {
+        const html = productsToRender.map(product => `
             <div class="bg-card border border-gray-800 rounded-xl overflow-hidden hover:border-gray-600 transition group flex flex-col">
                 <div class="h-48 bg-darker flex items-center justify-center p-4">
                     <div class="w-full h-full bg-gray-800/50 rounded flex items-center justify-center">
@@ -144,18 +188,41 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </div>
         `).join('');
+
+        if (append) {
+             els.productsGrid.insertAdjacentHTML('beforeend', html);
+        } else {
+             els.productsGrid.innerHTML = html;
+        }
     }
 
     // ==========================================
     // CART LOGIC
     // ==========================================
-    window.addToCart = async (productId) => {
+
+    async function fetchCart() {
+        if (!state.user.email) return;
         try {
-            const data = await ApiService.addToCart(productId, 1, state.cart);
-            state.cart = data.cart;
-            saveCart();
+            const data = await ApiService.getCart();
+            state.cart = data.items || [];
+            state.cartCount = data.items_count || 0;
+            state.cartTotal = data.total || 0;
             updateCartUI();
-            
+        } catch (err) {
+            console.error("Failed to load cart", err);
+        }
+    }
+
+    window.addToCart = async (productId) => {
+        if (!state.user.email) {
+            showToast('Для добавления в корзину необходимо войти', true);
+            openAuthModal('login');
+            return;
+        }
+
+        try {
+            await ApiService.addToCart(productId, 1);
+            await fetchCart();
             const product = state.products.find(p => p.id === productId);
             showToast(`Добавлено: ${product?.name || 'Товар'}`);
         } catch (err) {
@@ -165,90 +232,62 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.removeFromCart = async (productId) => {
         try {
-            const data = await ApiService.removeFromCart(productId, state.cart);
-            state.cart = data.cart;
-            saveCart();
-            updateCartUI();
+            await ApiService.removeFromCart(productId);
+             await fetchCart();
         } catch (err) {
             showToast('Ошибка удаления: ' + err.message, true);
         }
     };
 
     window.updateCartQuantity = async (productId, delta) => {
-        const newQty = (state.cart[productId] || 1) + delta;
+        const item = state.cart.find(i => i.product_id === productId);
+        if (!item) return;
+
+        const newQty = item.quantity + delta;
         try {
             if (newQty <= 0) {
-                return window.removeFromCart(productId);
+                await ApiService.removeFromCart(productId);
+            } else {
+                await ApiService.updateCart(productId, newQty);
             }
-            const data = await ApiService.updateCart(productId, newQty, state.cart);
-            state.cart = data.cart;
-            saveCart();
-            updateCartUI();
+            await fetchCart();
         } catch (err) {
             showToast('Ошибка изменения: ' + err.message, true);
         }
     };
 
-    // New sync function
-    async function syncCartWithServer() {
-        try {
-            // Pass current state.cart to server
-            // Server will ignore it if logged in and use DB instead
-            const data = await ApiService.getCart(state.cart);
-            state.cart = data.cart_dict || {};
-            saveCart();
-            updateCartUI();
-        } catch (err) {
-            console.error("Cart sync failed:", err);
-        }
-    }
-
-    function saveCart() {
-        localStorage.setItem('shop_cart', JSON.stringify(state.cart));
-    }
-
     function updateCartUI() {
-        // Update badge count
-        const totalItems = Object.values(state.cart).reduce((a, b) => a + b, 0);
-        els.cartBadge.textContent = totalItems;
-        
-        // Determine cart content on frontend to avoid GET with body issue in JS fetch
-        const cartProducts = Object.keys(state.cart).map(idStr => {
-            const id = parseInt(idStr);
-            const product = state.products.find(p => p.id === id);
-            return {
-                id,
-                qty: state.cart[id],
-                product
-            };
-        }).filter(item => item.product); // Filter out if products aren't loaded yet
+        els.cartBadge.textContent = state.cartCount;
 
-        if (cartProducts.length === 0) {
+        if (state.cart.length === 0) {
             els.cartEmptyText.classList.remove('hidden');
             els.cartItemsContainer.innerHTML = '';
             els.cartTotal.textContent = '0 ₽';
+
+            if (!state.user.email) {
+                 els.cartEmptyText.textContent = 'Войдите, чтобы пользоваться корзиной';
+            } else {
+                 els.cartEmptyText.textContent = 'Ваша корзина пуста';
+            }
             return;
         }
 
         els.cartEmptyText.classList.add('hidden');
         
         let html = '';
-        let totalPrice = 0;
 
-        cartProducts.forEach((item) => {
-            const itemTotal = item.product.price * item.qty;
-            totalPrice += itemTotal;
+        state.cart.forEach((item) => {
             html += `
                 <div class="flex gap-4 p-3 bg-darker rounded-lg border border-gray-800">
                     <div class="flex-1">
-                        <h4 class="text-white text-sm font-bold truncate">${item.product.name}</h4>
-                        <p class="text-primary font-medium text-sm mt-1">${item.product.price} ₽</p>
+                        <h4 class="text-white text-sm font-bold truncate">${item.name}</h4>
+                        <p class="text-primary font-medium text-sm mt-1">${item.price} ₽</p>
                         
                         <div class="flex items-center gap-3 mt-3">
-                            <button onclick="window.updateCartQuantity(${item.id}, -1)" class="w-6 h-6 bg-gray-800 hover:bg-gray-700 rounded flex items-center justify-center text-gray-300">-</button>
-                            <span class="text-white text-sm w-4 text-center">${item.qty}</span>
-                            <button onclick="window.updateCartQuantity(${item.id}, 1)" class="w-6 h-6 bg-gray-800 hover:bg-gray-700 rounded flex items-center justify-center text-gray-300">+</button>
-                            <button onclick="window.removeFromCart(${item.id})" class="ml-auto text-xs text-red-500 hover:text-red-400">Удалить</button>
+                            <button onclick="window.updateCartQuantity(${item.product_id}, -1)" class="w-6 h-6 bg-gray-800 hover:bg-gray-700 rounded flex items-center justify-center text-gray-300">-</button>
+                            <span class="text-white text-sm w-4 text-center">${item.quantity}</span>
+                            <button onclick="window.updateCartQuantity(${item.product_id}, 1)" class="w-6 h-6 bg-gray-800 hover:bg-gray-700 rounded flex items-center justify-center text-gray-300">+</button>
+                            <button onclick="window.removeFromCart(${item.product_id})" class="ml-auto text-xs text-red-500 hover:text-red-400">Удалить</button>
                         </div>
                     </div>
                 </div>
@@ -256,7 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         els.cartItemsContainer.innerHTML = html;
-        els.cartTotal.textContent = `${totalPrice} ₽`;
+        els.cartTotal.textContent = `${state.cartTotal} ₽`;
     }
 
     function openCart() {
@@ -335,10 +374,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 showToast('Успешная регистрация! Выполняется вход...');
                 // Auto-login after register
                 const data = await ApiService.login(email, password);
-                finalizeLogin(data.access_token, email);
+                await finalizeLogin(data.access_token, email);
             } else {
                 const data = await ApiService.login(email, password);
-                finalizeLogin(data.access_token, email);
+                await finalizeLogin(data.access_token, email);
             }
         } catch (error) {
             els.authError.textContent = error.message;
@@ -353,12 +392,8 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('access_token', token);
         localStorage.setItem('user_email', email);
         state.user.email = email;
-        
-        // Discard guest cart as requested and load user cart
-        state.cart = {};
-        saveCart();
-        
-        await syncCartWithServer();
+
+        await fetchCart();
         updateNavbarAuth();
         closeAuthModal();
         showToast('Добро пожаловать!');
@@ -367,9 +402,12 @@ document.addEventListener('DOMContentLoaded', () => {
     function logout() {
         localStorage.removeItem('access_token');
         localStorage.removeItem('user_email');
-        localStorage.removeItem('shop_cart'); // Clear cart on logout
+        localStorage.removeItem('shop_cart'); // Legacy remove
         state.user.email = null;
-        state.cart = {}; 
+
+        state.cart = [];
+        state.cartCount = 0;
+        state.cartTotal = 0;
         
         updateNavbarAuth();
         updateCartUI(); // Reset UI

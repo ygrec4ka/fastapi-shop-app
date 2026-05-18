@@ -71,8 +71,12 @@ class ApiService {
     }
 
     // CATALOG
-    static async getProducts() {
-        return this.request('/products/');
+    static async getProducts(cursor = null, limit = 20) {
+        let url = `/products/?limit=${limit}`;
+        if (cursor) {
+            url += `&cursor=${cursor}`;
+        }
+        return this.request(url);
     }
 
     static async getCategories() {
@@ -80,41 +84,33 @@ class ApiService {
     }
 
     // CART
-    static async getCart(cartData) {
-        return this.request('/cart/cart', {
-            method: 'POST',
-            body: JSON.stringify(cartData || {})
-        });
+    static async getCart() {
+        return this.request('/cart/');
     }
 
-    static async addToCart(productId, quantity, cartData) {
+    static async addToCart(productId, quantity) {
         return this.request('/cart/add', {
             method: 'POST',
             body: JSON.stringify({
                 product_id: productId,
-                quantity: quantity,
-                cart: cartData || {}
+                quantity: quantity
             })
         });
     }
 
-    static async updateCart(productId, quantity, cartData) {
+    static async updateCart(productId, quantity) {
         return this.request('/cart/update', {
             method: 'PUT',
             body: JSON.stringify({
                 product_id: productId,
-                quantity: quantity,
-                cart: cartData || {}
+                quantity: quantity
             })
         });
     }
 
-    static async removeFromCart(productId, cartData) {
+    static async removeFromCart(productId) {
         return this.request(`/cart/remove/${productId}`, {
-            method: 'DELETE',
-            body: JSON.stringify({
-                cart: cartData || {}
-            })
+            method: 'DELETE'
         });
     }
 }
