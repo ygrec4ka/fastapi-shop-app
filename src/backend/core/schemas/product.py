@@ -44,3 +44,4 @@ class ProductResponse(BaseModel):
 class ProductListResponse(BaseModel):
     items: List[ProductResponse]
     total: int = Field(..., description="Total product count")
+    next_cursor: Optional[int] = Field(None, description="Cursor for the next page")
